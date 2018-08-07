@@ -1,0 +1,525 @@
+<html>
+<meta charset="utf-8">
+
+<script>
+
+window.onload = function() {
+	var dataPointsADS01 = [];
+	var dataPointsADS23 = [];
+	var dataPointsTemperature = [];
+	var dataPointsHeating = [];
+	var dataPointsHumidity = [ ];
+	var dataPointsLDR = [ ];
+	var dataPointsSoilMoisture = [ ];
+	var dataPointsLeafTemperature = [ ];
+	var dataPointsHeaterTemperature = [ ];
+
+	var leaf_adc_0_1 = [ ];
+	var leaf_adc_2_3 = [ ];
+	var air_adc2_0_1 = [ ];
+	var soil_adc2_2_3	= [ ];
+	var temperatureEnvironmentLeaves = [ ];
+
+	var chart, chartTemperature, chartHeating, chartHumidity, chartLDR, chartSoilMoisture, chartLeafTemperature,
+	 chartHeaterTemperature;
+
+	var chartLeafADS01, chartLeafADS23, chartAir, chartSoil;
+
+	var i = 0;
+	var iLeaf = 0;
+
+	//var clientSocket = new WebSocket("ws://localhost:8000");
+	var clientSocket = new WebSocket("ws://159.89.89.60:8000");
+
+	clientSocket.onmessage = function (event) {
+
+		var reader = new FileReader();
+
+		reader.onload = function() {
+			result = JSON.parse(reader.result);
+			//console.log(result);
+
+			if (result['resources'][0]['uuid'] == '164f4961-5e91-4d10-8e70-6e0df691f798') {
+
+				if (leaf_adc_0_1.length > 512) {
+					leaf_adc_0_1.shift();
+					leaf_adc_2_3.shift();
+					air_adc2_0_1.shift();
+					soil_adc2_2_3.shift();
+					temperatureEnvironmentLeaves.shift();
+				}
+
+				iLeaf++;
+
+				leaf_adc_0_1.push({x: iLeaf, y: parseFloat(result['resources'][0]['capabilities']['room_monitoring'][0]['ads_0_1'])});
+				leaf_adc_2_3.push({x: iLeaf, y: parseFloat(result['resources'][0]['capabilities']['room_monitoring'][0]['ads_2_3'])});
+				air_adc2_0_1.push({x: iLeaf, y: parseFloat(result['resources'][0]['capabilities']['room_monitoring'][0]['ads2_0_1'])});
+				soil_adc2_2_3.push({x: iLeaf, y: parseFloat(result['resources'][0]['capabilities']['room_monitoring'][0]['ads2_2_3'])});
+				temperatureEnvironmentLeaves.push({x: iLeaf, y: parseFloat(result['resources'][0]['capabilities']['room_monitoring'][0]['temperature'])});
+
+				chartLeafADS01.render();
+				chartLeafADS23.render();
+				chartAir.render();
+				chartSoil.render();
+
+				return;
+			}
+
+			console.log(result['resources'][0]['capabilities']['room_monitoring'][0]['temperature']);
+			console.log(result['resources'][0]['capabilities']['room_monitoring'][0]['ads_2_3']);
+
+			if (dataPointsADS01.length > 32) {
+				document.getElementById("loader").style.display = "none";
+				document.getElementById("loader_status").style.display = "none";
+			} else {
+				document.getElementById("loader_status").innerHTML = 'LOADING... ' + Math.ceil((dataPointsADS01.length / 32) * 100) + '%';
+				console.log(Math.ceil((dataPointsADS01.length / 32) * 100) + '%');
+			}
+
+			console.log(dataPointsADS01.length);
+
+			if (i > 512) {
+
+				dataPointsADS01.shift();
+				dataPointsADS23.shift();
+				dataPointsTemperature.shift();
+				dataPointsHeating.shift();
+				dataPointsHumidity.shift();
+				dataPointsLDR.shift();
+				dataPointsSoilMoisture.shift();
+				dataPointsLeafTemperature.shift();
+				dataPointsHeaterTemperature.shift();
+
+			}
+
+			i += 1;
+
+			dataPointsADS01.push({x: i, y: parseFloat(result['resources'][0]['capabilities']['room_monitoring'][0]['ads_0_1'])});
+			dataPointsADS23.push({x: i, y: parseFloat(result['resources'][0]['capabilities']['room_monitoring'][0]['ads_2_3'])});
+			dataPointsTemperature.push({x: i, y: parseFloat(result['resources'][0]['capabilities']['room_monitoring'][0]['temperature'])})	;
+			dataPointsHeating.push({x: i, y: parseFloat(result['resources'][0]['capabilities']['room_monitoring'][0]['heating'])});
+			dataPointsHumidity.push({x: i, y: parseFloat(result['resources'][0]['capabilities']['room_monitoring'][0]['humidity'])});
+			dataPointsLDR.push({x: i, y: parseFloat(result['resources'][0]['capabilities']['room_monitoring'][0]['ldr'])});
+			dataPointsSoilMoisture.push({x: i, y: parseFloat(result['resources'][0]['capabilities']['room_monitoring'][0]['soil_moisture'])});
+			dataPointsLeafTemperature.push({x: i, y: parseFloat(result['resources'][0]['capabilities']['room_monitoring'][0]['ads2_0_1'])});
+			dataPointsHeaterTemperature.push({x: i, y: parseFloat(result['resources'][0]['capabilities']['room_monitoring'][0]['ads2_2_3'])});
+
+			chart.render();
+			chartTemperature.render();
+			chartHeating.render();
+			chartHumidity.render();
+			chartLDR.render();
+			chartSoilMoisture.render();
+			chartLeafTemperature.render();
+			chartHeaterTemperature.render();
+
+		}
+
+		reader.readAsText(event.data);
+
+	}
+
+	chart = new CanvasJS.Chart("chartContainer",{
+			zoomEnabled: true,
+			title:{
+				text:"Temperature from thermocouples (ºC)"
+			},
+			data: [{
+				type: "line",
+				name: "Upper thermocouple",
+				lineColor: "green",
+				showInLegend: true,
+				dataPoints : dataPointsADS01,
+			},
+			{
+				lineColor: "red",
+				type: "line",
+				name: "Lower thermocouple",
+				showInLegend: true,
+				dataPoints : dataPointsADS23,
+			}
+			]
+	});
+
+	chartTemperature = new CanvasJS.Chart("chartContainerTemperature",{
+			zoomEnabled: true,
+			title:{
+				text:"Temperature (DHT)"
+			},
+			data: [{
+				type: "line",
+				lineColor: "red",
+				name: "Temperature (ºC)",
+				showInLegend: true,
+				dataPoints : dataPointsTemperature,
+			},
+			]
+	});
+
+	chartHeating = new CanvasJS.Chart("chartContainerHeating",{
+			zoomEnabled: true,
+			title:{
+				text:"Heater"
+			},
+			data: [{
+				type: "line",
+				lineColor: "black",
+				name: "Heating (0-1)",
+				showInLegend: true,
+				dataPoints : dataPointsHeating,
+			},
+			]
+	});
+
+	chartHumidity = new CanvasJS.Chart("chartContainerHumidity",{
+			zoomEnabled: true,
+			title:{
+				text:"Humidity (DHT)"
+			},
+			data: [{
+				type: "line",
+				lineColor: "darkblue",
+				name: "Humidity (%)",
+				showInLegend: true,
+				dataPoints : dataPointsHumidity,
+			},
+			]
+	});
+
+	chartLDR = new CanvasJS.Chart("chartContainerLDR",{
+			zoomEnabled: true,
+			title:{
+				text:"LDR"
+			},
+			data: [{
+				type: "line",
+				lineColor: "orange",
+				dataPoints : dataPointsLDR,
+			},
+			]
+	});
+
+	chartLDR = new CanvasJS.Chart("chartContainerLDR",{
+			zoomEnabled: true,
+			title:{
+				text:"LDR"
+			},
+			data: [{
+				type: "line",
+				lineColor: "gray",
+				dataPoints : dataPointsLDR,
+			},
+			]
+	});
+
+	chartLeafTemperature = new CanvasJS.Chart("chartContainerLeafTemperature",{
+			zoomEnabled: true,
+			title:{
+				text:"Leaf Temperature (ADS)"
+			},
+			data: [{
+				type: "line",
+				lineColor: "green",
+				dataPoints : dataPointsLeafTemperature,
+			},
+			]
+	});
+
+	chartHeaterTemperature = new CanvasJS.Chart("chartContainerHeaterTemperature",{
+			zoomEnabled: true,
+			title:{
+				text:"Heater Temperature (ADS)"
+			},
+			data: [{
+				type: "line",
+				lineColor: "blue",
+				dataPoints : dataPointsHeaterTemperature,
+			},
+			]
+	});
+
+	chartSoilMoisture = new CanvasJS.Chart("chartContainerSoilMoisture",{
+			zoomEnabled: true,
+			title:{
+				text:"Soil Moisture"
+			},
+			data: [{
+				type: "line",
+				lineColor: "red",
+				dataPoints : dataPointsSoilMoisture,
+			},
+			]
+	});
+
+	function buildGraph(id, text, color, points) {
+		return new CanvasJS.Chart(id, {
+				zoomEnabled: true,
+				title:{
+					text: text
+				},
+				data: [{
+					type: "line",
+					lineColor: color,
+					dataPoints : points,
+				},
+				]
+		});
+	}
+
+	function buildGraph2Points(id, title, legend1, legend2, color1, color2, points1, points2) {
+		return new CanvasJS.Chart(id,{
+				zoomEnabled: true,
+				title:{
+					text: title
+				},
+				data: [{
+					type: "line",
+					name: legend1,
+					lineColor: color1,
+					showInLegend: true,
+					dataPoints : points1,
+					legendMarkerColor: color1,
+					markerColor: color1,
+				},
+				{
+					legendMarkerColor: color2,
+					lineColor: color2,
+					type: "line",
+					name: legend2,
+					showInLegend: true,
+					dataPoints : points2,
+					markerColor: color2,
+				}
+				]
+		});
+	}
+
+	//chartLeafADS01 = buildGraph('chartLeafADS01', 'Leaf Temperature', 'green', leaf_adc_0_1);
+	chartLeafADS01 = buildGraph2Points('chartLeafADS01', 'Leaf Temperature',
+		'Leaf Temperature', 'Ambient temperature',
+		'blue', 'red',
+		leaf_adc_0_1, temperatureEnvironmentLeaves
+	);
+
+	//chartLeafADS23 = buildGraph('chartLeafADS23', 'Leaf Temperature (2)', 'orange', leaf_adc_2_3);
+	chartLeafADS23 = buildGraph2Points('chartLeafADS23', 'Leaf Temperature (2)',
+		'Leaf Temperature', 'Ambient temperature',
+		'blue', 'red',
+		leaf_adc_2_3, temperatureEnvironmentLeaves
+	);
+
+	//chartAir = buildGraph('chartAir', 'Air temperature', 'red', air_adc2_0_1);
+	chartAir = buildGraph2Points('chartAir', 'Air temperature',
+		'Air Temperature', 'Ambient temperature',
+		'blue', 'red',
+		air_adc2_0_1, temperatureEnvironmentLeaves
+	);
+
+	//chartSoil = buildGraph('chartSoil', 'Soil temperature', 'blue', soil_adc2_2_3);
+	chartSoil = buildGraph2Points('chartSoil', 'Soil temperature',
+		'Soil Temperature', 'Ambient temperature',
+		'blue', 'red',
+		soil_adc2_2_3, temperatureEnvironmentLeaves
+	);
+
+}
+
+</script>
+
+<script>
+function changePageSapFlow() {
+	if (document.getElementById("sapflow").style.display == "none") {
+		document.getElementById("leaves").style.display = "none";
+		document.getElementById("sapflow").style.display = "block";
+
+		chart.render();
+		chartTemperature.render();
+		chartHeating.render();
+		chartHumidity.render();
+		chartLDR.render();
+		chartSoilMoisture.render();
+		chartLeafTemperature.render();
+		chartHeaterTemperature.render();
+	}
+	console.log(document.getElementById("sapflow").style.display);
+}
+
+function changePageLeaves() {
+	if (document.getElementById("leaves").style.display == "none") {
+		document.getElementById("leaves").style.display = "block";
+		document.getElementById("sapflow").style.display = "none";
+
+		chartLeafADS01.render();
+		chartLeafADS23.render();
+		chartAir.render();
+		chartSoil.render();
+	}
+	console.log(document.getElementById("leaves").style.display);
+}
+</script>
+
+<!--<script type="text/javascript" src="https://canvasjs.com/assets/script/jquery-1.11.1.min.js"></script>-->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+
+<style>
+/* Center the loader */
+
+#loader {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 1;
+  width: 150px;
+  height: 150px;
+  margin: -75px 0 0 -75px;
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: 120px;
+  height: 120px;
+  -webkit-animation: spin 2s linear infinite;
+  animation: spin 2s linear infinite;
+	background-color: white;
+}
+
+#loader_status {
+  position: absolute;
+  left: 50%;
+  top: 80%;
+  z-index: 1;
+  width: 150px;
+  height: 20px;
+  margin: -75px 0 0 -75px;
+	text-align: center;
+	background-color: white;
+}
+
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Add animation to "page content" */
+.animate-bottom {
+  position: relative;
+  -webkit-animation-name: animatebottom;
+  -webkit-animation-duration: 1s;
+  animation-name: animatebottom;
+  animation-duration: 1s
+}
+
+@-webkit-keyframes animatebottom {
+  from { bottom:-100px; opacity:0 }
+  to { bottom:0px; opacity:1 }
+}
+
+@keyframes animatebottom {
+  from{ bottom:-100px; opacity:0 }
+  to{ bottom:0; opacity:1 }
+}
+
+#myDiv {
+  display: none;
+  text-align: center;
+}
+
+.chartCustom {
+	height: 300px;
+	width: 600px;
+}
+
+</style>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<body>
+
+
+	<div class="container">
+	  <h2>Sap Flow Project</h2>
+	  <button type="button" class="btn btn-success" onclick="changePageLeaves()">Leaves</button>
+	  <button type="button" class="btn btn-info" onclick="changePageSapFlow()">Sap Flow</button>
+	</div>
+
+
+<div id="loader">
+</div>
+
+<div id="loader_status">
+LOADING...
+</div>
+
+</div>
+
+<div id="sapflow" style="display: block;">
+
+<div align="center">
+	<div id="chartContainer" class="chartCustom"></div>
+</div>
+
+<br/><br/>
+<div align="center">
+	<div id="chartContainerHeating" class="chartCustom"></div>
+</div>
+
+<br/><br/>
+<div align="center">
+	<div id="chartContainerTemperature" class="chartCustom"></div>
+</div>
+
+<br/><br/>
+<div align="center">
+	<div id="chartContainerHumidity" class="chartCustom"></div>
+</div>
+
+<br/><br/>
+<div align="center">
+	<div id="chartContainerLDR" class="chartCustom"></div>
+</div>
+
+<br/><br/>
+<div align="center">
+	<div id="chartContainerLeafTemperature" class="chartCustom"></div>
+</div>
+
+<br/><br/>
+<div align="center">
+	<div id="chartContainerHeaterTemperature" class="chartCustom"></div>
+</div>
+
+<br/><br/>
+<div align="center">
+	<div id="chartContainerSoilMoisture" class="chartCustom"></div>
+</div>
+</div>
+
+<div id="leaves" style="display: none;">
+
+	<br/><br/>
+	<div align="center">
+		<div id="chartLeafADS01" class="chartCustom"></div>
+	</div>
+
+	<br/><br/>
+	<div align="center">
+		<div id="chartLeafADS23" class="chartCustom"></div>
+	</div>
+
+	<br/><br/>
+	<div align="center">
+		<div id="chartAir" class="chartCustom"></div>
+	</div>
+
+	<br/><br/>
+	<div align="center">
+		<div id="chartSoil" class="chartCustom"></div>
+	</div>
+
+</div>
+</body>
+</html>
