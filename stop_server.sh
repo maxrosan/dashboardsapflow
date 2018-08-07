@@ -1,7 +1,9 @@
 #!/bin/sh
 
-PIDs=`ps xau | grep "server.py" | awk '{ print $2 }'`
+for i in `ps xau | grep "start_server.sh" | awk '{ print $2 }'`; do
+  kill -9 $i || true
+done;
 
-for i in $PIDs; do
+for i in `ps xau | grep "server.py" | awk '{ print $2 }'`; do
   kill -9 $i || true
 done;
