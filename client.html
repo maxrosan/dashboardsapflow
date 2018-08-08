@@ -63,6 +63,9 @@ window.onload = function() {
 				chartSoil.render();
 
 				return;
+			} else if ( result['resources'][0]['uuid'] == 'processed-data' ) {
+				
+				return;
 			}
 
 			console.log(result['resources'][0]['capabilities']['room_monitoring'][0]['temperature']);
@@ -471,6 +474,7 @@ LOADING...
 
 <div id="sapflow" style="display: block;">
 
+<br/><br/>
 <div align="center">
 	<div id="chartContainer" class="chartCustom"></div>
 </div>
