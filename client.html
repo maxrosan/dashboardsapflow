@@ -57,14 +57,16 @@ window.onload = function() {
 				soil_adc2_2_3.push({x: iLeaf, y: parseFloat(result['resources'][0]['capabilities']['room_monitoring'][0]['ads2_2_3'])});
 				temperatureEnvironmentLeaves.push({x: iLeaf, y: parseFloat(result['resources'][0]['capabilities']['room_monitoring'][0]['temperature'])});
 
-				chartLeafADS01.render();
-				chartLeafADS23.render();
-				chartAir.render();
-				chartSoil.render();
+				if (leaf_adc_0_1.length > 30) {
+					chartLeafADS01.render();
+					chartLeafADS23.render();
+					chartAir.render();
+					chartSoil.render();
+				}
 
 				return;
 			} else if ( result['resources'][0]['uuid'] == 'processed-data' ) {
-				
+				console.log('Received processed data');
 				return;
 			}
 
@@ -108,14 +110,16 @@ window.onload = function() {
 			dataPointsLeafTemperature.push({x: i, y: parseFloat(result['resources'][0]['capabilities']['room_monitoring'][0]['ads2_0_1'])});
 			dataPointsHeaterTemperature.push({x: i, y: parseFloat(result['resources'][0]['capabilities']['room_monitoring'][0]['ads2_2_3'])});
 
-			chart.render();
-			chartTemperature.render();
-			chartHeating.render();
-			chartHumidity.render();
-			chartLDR.render();
-			chartSoilMoisture.render();
-			//chartLeafTemperature.render();
-			chartHeaterTemperature.render();
+			if (dataPointsADS01.length > 30) {
+				chart.render();
+				chartTemperature.render();
+				chartHeating.render();
+				chartHumidity.render();
+				chartLDR.render();
+				chartSoilMoisture.render();
+				//chartLeafTemperature.render();
+				chartHeaterTemperature.render();
+			}
 
 		}
 
