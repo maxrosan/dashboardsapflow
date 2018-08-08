@@ -71,9 +71,10 @@ window.onload = function() {
 			if (dataPointsADS01.length > 32) {
 				document.getElementById("loader").style.display = "none";
 				document.getElementById("loader_status").style.display = "none";
+				document.getElementById("loader_bg").style.display = "none";
 			} else {
 				document.getElementById("loader_status").innerHTML = 'LOADING... ' + Math.ceil((dataPointsADS01.length / 32) * 100) + '%';
-				console.log(Math.ceil((dataPointsADS01.length / 32) * 100) + '%');
+				//console.log(Math.ceil((dataPointsADS01.length / 32) * 100) + '%');
 			}
 
 			console.log(dataPointsADS01.length);
@@ -371,8 +372,7 @@ function changePageLeaves() {
 #loader {
   position: absolute;
   left: 50%;
-  top: 50%;
-  z-index: 1;
+  top: 45%;
   width: 150px;
   height: 150px;
   margin: -75px 0 0 -75px;
@@ -381,6 +381,7 @@ function changePageLeaves() {
   border-top: 16px solid #3498db;
   width: 120px;
   height: 120px;
+	z-index: 1;
   -webkit-animation: spin 2s linear infinite;
   animation: spin 2s linear infinite;
 	background-color: white;
@@ -388,13 +389,21 @@ function changePageLeaves() {
 
 #loader_status {
   position: absolute;
-  left: 50%;
-  top: 80%;
   z-index: 1;
-  width: 150px;
-  height: 20px;
-  margin: -75px 0 0 -75px;
+  width: 100%;
+  height: 50px;
 	text-align: center;
+	background-color: white;
+}
+
+#loader_bg {
+  position: absolute;
+  left: 0%;
+  top: 0%;
+  width: 100%;
+  height: 100%;
+	text-align: center;
+	z-index: 1;
 	background-color: white;
 }
 
@@ -450,13 +459,15 @@ function changePageLeaves() {
 	</div>
 
 
+	<div id="loader_bg">
+	</div>
+
+
 <div id="loader">
 </div>
 
 <div id="loader_status">
 LOADING...
-</div>
-
 </div>
 
 <div id="sapflow" style="display: block;">
