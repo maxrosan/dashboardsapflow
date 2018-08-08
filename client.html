@@ -110,7 +110,7 @@ window.onload = function() {
 			chartHumidity.render();
 			chartLDR.render();
 			chartSoilMoisture.render();
-			chartLeafTemperature.render();
+			//chartLeafTemperature.render();
 			chartHeaterTemperature.render();
 
 		}
@@ -212,7 +212,7 @@ window.onload = function() {
 			]
 	});
 
-	chartLeafTemperature = new CanvasJS.Chart("chartContainerLeafTemperature",{
+	/*chartLeafTemperature = new CanvasJS.Chart("chartContainerLeafTemperature",{
 			zoomEnabled: true,
 			title:{
 				text:"Leaf Temperature (ADS)"
@@ -223,7 +223,7 @@ window.onload = function() {
 				dataPoints : dataPointsLeafTemperature,
 			},
 			]
-	});
+	});*/
 
 	chartHeaterTemperature = new CanvasJS.Chart("chartContainerHeaterTemperature",{
 			zoomEnabled: true,
@@ -232,9 +232,12 @@ window.onload = function() {
 			},
 			data: [{
 				type: "line",
-				lineColor: "blue",
 				dataPoints : dataPointsHeaterTemperature,
 			},
+			{
+				type: "line",
+				dataPoints : dataPointsLeafTemperature,
+			}
 			]
 	});
 
@@ -338,7 +341,7 @@ function changePageSapFlow() {
 		chartHumidity.render();
 		chartLDR.render();
 		chartSoilMoisture.render();
-		chartLeafTemperature.render();
+		//chartLeafTemperature.render();
 		chartHeaterTemperature.render();
 	}
 	console.log(document.getElementById("sapflow").style.display);
@@ -482,10 +485,10 @@ LOADING...
 	<div id="chartContainerLDR" class="chartCustom"></div>
 </div>
 
-<br/><br/>
+<!--<br/><br/>
 <div align="center">
 	<div id="chartContainerLeafTemperature" class="chartCustom"></div>
-</div>
+</div>-->
 
 <br/><br/>
 <div align="center">
