@@ -53,7 +53,7 @@ p = Pool(2)
 
 def removeOldestEntries(collection):
 	#if collection.count() > 1024 * 10:
-	
+
 	if collection.find().count() > 3600 * 24 * 7:
 		for record in collection.find().sort([ ("date", 1) ]).limit(1):
 			print 'DEL => ', record
@@ -94,6 +94,8 @@ def processDataWorker(lstRef, elapsedTimeAfterHeating):
 		lowerTCList = [ ]
 
 		lastDay = [ r for r in dbMongo['sapflow'].find().sort([ ("date", -1) ]).limit(48 * 3600) ]
+
+		print 'lastDay', len(lastDay)
 
 		heating = 0.
 		i = None
