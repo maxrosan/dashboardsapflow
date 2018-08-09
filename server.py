@@ -153,7 +153,7 @@ def processDataWorker(lstRef, elapsedTimeAfterHeating):
 
 		lstRef[:] = lst
 
-		time.sleep(60 * 5)
+		time.sleep(30)
 
 def downloadEverything(lastMessages):
 
