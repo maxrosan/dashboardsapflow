@@ -49,13 +49,11 @@ def downloadInParallel(url):
 
 		return (sj, j)
 
-client = MongoClient()
-dbMongo = client['interscity']
-
 p = Pool(2)
 
 def removeOldestEntries(collection):
 	#if collection.count() > 1024 * 10:
+	
 	if collection.find().count() > 3600 * 24 * 7:
 		for record in collection.find().sort([ ("date", 1) ]).limit(1):
 			print 'DEL => ', record
@@ -82,6 +80,9 @@ def getProcessedData(idData, data):
 def processDataWorker(lstRef, elapsedTimeAfterHeating):
 
 	import math
+
+	client = MongoClient()
+	dbMongo = client['interscity']
 
 	while True:
 
@@ -148,6 +149,9 @@ def downloadEverything(lastMessages):
 
 	print 'STARTED'
 
+	client = MongoClient()
+	dbMongo = client['interscity']
+
 	while True:
 
 		(sj, objSapFlow) = downloadInParallel(sapFlowURL)
@@ -189,6 +193,9 @@ processDownload.start()
 
 lastTimeProcessedDataWasSent = time.time()
 lastTimeProcessRan = time.time()
+
+#client = MongoClient()
+#dbMongo = client['interscity']
 
 while True:
 
