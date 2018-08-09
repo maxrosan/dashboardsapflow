@@ -82,7 +82,7 @@ def getProcessedData(idData, data):
 def processDataWorker(lstRef, elapsedTimeAfterHeating):
 
 	import math
-	
+
 	lst = []
 
 	i = 0
@@ -210,8 +210,10 @@ while True:
 
 			for c in clients:
 				processedData = getProcessedData('processed-data', list(listWithDataProcessed))
-				processedData60 = getProcessedData('processed-data-60', list(listWithDataProcessed60))
 				c.sendMessage(processedData)
+
+			for c in clients:
+				processedData60 = getProcessedData('processed-data-60', list(listWithDataProcessed60))
 				c.sendMessage(processedData60)
 
 			lastTimeProcessedDataWasSent = time.time()
