@@ -50,7 +50,7 @@ def downloadInParallel(url):
 		j = downloadJson(url)
 		sj = json.dumps(j)
 
-		print sj
+		#print sj
 
 		return (sj, j)
 
@@ -89,6 +89,8 @@ def processDataWorker(lstRef, elapsedTimeAfterHeating):
 	client = MongoClient()
 	dbMongo = client['interscity']
 
+	print 'START PROCESSEDDATA', elapsedTimeAfterHeating
+
 	while True:
 
 		lst = []
@@ -100,11 +102,13 @@ def processDataWorker(lstRef, elapsedTimeAfterHeating):
 
 		lastDay = [ r for r in dbMongo['sapflow'].find().sort([ ("date", -1) ]).limit(12 * 3600) ]
 
+		print 'RUN PROCESSEDDATA', elapsedTimeAfterHeating, 'lastDay =>', len(lastDay)
+
 		heating = 0.
 		i = None
 		count = False
 
-		print 'Processing'
+		#print 'Processing'
 		for record in reversed(lastDay):
 			#print len(upperTCList)
 
