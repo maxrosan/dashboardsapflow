@@ -21,6 +21,7 @@ window.onload = function() {
 	var temperatureEnvironmentLeaves = [ ];
 
 	var processedData = [ ];
+	var processedData45 = [ ];
 	var processedData60 = [ ];
 
 	var chart, chartTemperature, chartHeating, chartHumidity, chartLDR, chartSoilMoisture, chartLeafTemperature,
@@ -29,13 +30,14 @@ window.onload = function() {
 	var chartLeafADS01, chartLeafADS23, chartAir, chartSoil;
 
 	var chartProcessedData;
+	var chartProcessedData45;
 	var chartProcessedData60;
 
 	var i = 0;
 	var iLeaf = 0;
 
-	//var clientSocket = new WebSocket("ws://localhost:8000");
-	var clientSocket = new WebSocket("ws://159.89.89.60:8000");
+	var clientSocket = new WebSocket("ws://localhost:8000");
+	//var clientSocket = new WebSocket("ws://159.89.89.60:8000");
 
 	clientSocket.onmessage = function (event) {
 
@@ -135,7 +137,40 @@ window.onload = function() {
 				chartProcessedData60.render();
 
 				return;
+		 } else if ( result['resources'][0]['uuid'] == 'processed-data-45' ) {
+
+				console.log('Received 45');
+
+				while (processedData45.length > 0) {
+					processedData45.pop();
+				}
+
+				for (var l = 0; l < result['resources'][0]['data'].length; l++) {
+					if (l % 20 == 0) {
+						processedData45.push(
+							{
+								indexLabel: result['resources'][0]['data'][l].x,
+								indexLabelOrientation: "vertical",
+								x: l,
+								y: parseFloat(result['resources'][0]['data'][l].y) }
+						);
+					} else {
+						processedData45.push(
+							{
+								x: l,
+								y: parseFloat(result['resources'][0]['data'][l].y) }
+						);
+					}
+
+				}
+
+				//console.log(processedData);
+
+				chartProcessedData45.render();
+
+				return;
 			}
+
 
 			console.log(result['resources'][0]['capabilities']['room_monitoring'][0]['temperature']);
 			console.log(result['resources'][0]['capabilities']['room_monitoring'][0]['ads_2_3']);
@@ -415,6 +450,19 @@ window.onload = function() {
 			]
 	});
 
+	chartProcessedData45 = new CanvasJS.Chart('chartProcessedData45', {
+			zoomEnabled: true,
+			title:{
+				text: 'Processed Data ( ln(T1/T2) 45s after heating )'
+			},
+			data: [{
+				type: "line",
+				lineColor: 'red',
+				dataPoints : processedData45,
+			},
+			]
+	});
+
 	chartProcessedData60 = new CanvasJS.Chart('chartProcessedData60', {
 			zoomEnabled: true,
 			title:{
@@ -589,6 +637,11 @@ LOADING...
 	<br/><br/>
 	<div align="center">
 		<div id="chartProcessedData" class="chartCustom"></div>
+	</div>
+
+	<br/><br/>
+	<div align="center">
+		<div id="chartProcessedData45" class="chartCustom"></div>
 	</div>
 
 	<br/><br/>

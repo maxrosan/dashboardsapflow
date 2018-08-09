@@ -83,84 +83,75 @@ def processDataWorker(lstRef, elapsedTimeAfterHeating):
 
 	import math
 
-	lst = []
+	while True:
 
-	i = 0
-	lastDate = None
-	upperTCList = [ ]
-	lowerTCList = [ ]
+		lst = []
 
-	lastDay = [ r for r in dbMongo['sapflow'].find().sort([ ("date", -1) ]).limit(48 * 3600) ]
+		i = 0
+		lastDate = None
+		upperTCList = [ ]
+		lowerTCList = [ ]
 
-	heating = 0.
-	i = None
-	count = False
+		lastDay = [ r for r in dbMongo['sapflow'].find().sort([ ("date", -1) ]).limit(48 * 3600) ]
 
-	for record in reversed(lastDay):
-		#print len(upperTCList)
+		heating = 0.
+		i = None
+		count = False
 
-		if int(record['heating']) == 1 and int(heating) == 0 and not count:
-			count = True
-			i = dateutil.parser.parse(record['date'])
-			upperTCList[:] = []
-			lowerTCList[:] = []
+		for record in reversed(lastDay):
+			#print len(upperTCList)
 
-		heating = record['heating']
+			if int(record['heating']) == 1 and int(heating) == 0 and not count:
+				count = True
+				i = dateutil.parser.parse(record['date'])
+				upperTCList[:] = []
+				lowerTCList[:] = []
 
-		if count:
-			upperTCList.append( record['ads_0_1'] )
-			lowerTCList.append( record['ads_2_3'] )
+			heating = record['heating']
 
-		heating = record['heating']
-		d = dateutil.parser.parse(record['date'])
+			if count:
+				upperTCList.append( record['ads_0_1'] )
+				lowerTCList.append( record['ads_2_3'] )
 
-		if i == None:
-			i = d
+			heating = record['heating']
+			d = dateutil.parser.parse(record['date'])
 
-		diff = d - i
+			if i == None:
+				i = d
 
-		if count and diff.seconds > elapsedTimeAfterHeating:
+			diff = d - i
 
-			count = False
+			if count and diff.seconds > elapsedTimeAfterHeating:
 
-			div = (upperTCList[-1] - upperTCList[0] + 1e-6) / (lowerTCList[-1] - lowerTCList[0]  + 1e-6)
+				count = False
 
-			if div <= 0:
-				div = 1.
+				div = (upperTCList[-1] - upperTCList[0] + 1e-6) / (lowerTCList[-1] - lowerTCList[0]  + 1e-6)
 
-			lst.append(
-				{
-				  'x': '%.2d:%.2d' % (d.hour, d.minute),
-				  'y': '%f' % ( math.log(div) )
-				}
-			)
+				if div <= 0:
+					div = 1.
 
-			upperTCList = upperTCList[1:]
-			lowerTCList = lowerTCList[1:]
+				lst.append(
+					{
+					  'x': '%.2d:%.2d' % ((d.hour - 3) % 24, d.minute),
+					  'y': '%f' % ( math.log(div) )
+					}
+				)
 
-	print lst
-	lstRef[:] = lst
-	#time.sleep(10)
+				upperTCList = upperTCList[1:]
+				lowerTCList = lowerTCList[1:]
 
-managerMP = multiprocessing.Manager()
+		lstRef[:] = lst
 
-listWithDataProcessed = managerMP.list([])
-processData = multiprocessing.Process(target=processDataWorker, args=(listWithDataProcessed, 30))
-processData.start()
+		time.sleep(60 * 4)
 
-listWithDataProcessed60 = managerMP.list([])
-processData60 = multiprocessing.Process(target=processDataWorker, args=(listWithDataProcessed60, 60))
-processData60.start()
+def downloadEverything(lastMessages):
 
-lastTimeProcessedDataWasSent = time.time()
-lastTimeProcessRan = time.time()
+	print 'STARTED'
 
-while True:
+	while True:
 
-	if time.time() - ts > 1:
-		ts = time.time()
-
-		(sj, objSapFlow), (sjLeaves, objLeaves) = p.map(downloadInParallel, [sapFlowURL, leavesURL])
+		(sj, objSapFlow) = downloadInParallel(sapFlowURL)
+		(sjLeaves, objLeaves) = downloadInParallel(leavesURL)
 
 		dbMongo['sapflow'].insert(objSapFlow['resources'][0]['capabilities']['room_monitoring'][0])
 		dbMongo['leaves'].insert(objLeaves['resources'][0]['capabilities']['room_monitoring'][0])
@@ -168,14 +159,57 @@ while True:
 		removeOldestEntries(dbMongo['sapflow'])
 		removeOldestEntries(dbMongo['leaves'])
 
-		print dbMongo['sapflow'].count(), dbMongo['leaves'].count()
-
 		lastMessages.append(sj)
 		lastMessages.append(sjLeaves)
 
 		if len(lastMessages) > 64:
-			lastMessages = lastMessages[2:]
+			lastMessages[:] = lastMessages[2:]
 
+		time.sleep(1)
+
+	return
+
+managerMP = multiprocessing.Manager()
+
+listWithDataProcessed = managerMP.list([])
+processData = multiprocessing.Process(target=processDataWorker, args=(listWithDataProcessed, 30))
+processData.start()
+
+listWithDataProcessed45 = managerMP.list([])
+processData45 = multiprocessing.Process(target=processDataWorker, args=(listWithDataProcessed45, 45))
+processData45.start()
+
+listWithDataProcessed60 = managerMP.list([])
+processData60 = multiprocessing.Process(target=processDataWorker, args=(listWithDataProcessed60, 60))
+processData60.start()
+
+lastMessages = managerMP.list([])
+processDownload = multiprocessing.Process(target=downloadEverything, args=(lastMessages,))
+processDownload.start()
+
+lastTimeProcessedDataWasSent = time.time()
+lastTimeProcessRan = time.time()
+
+while True:
+
+	if time.time() - ts > 2:
+		ts = time.time()
+
+		#(sj, objSapFlow), (sjLeaves, objLeaves) = p.map(downloadInParallel, [sapFlowURL, leavesURL])
+
+		#dbMongo['sapflow'].insert(objSapFlow['resources'][0]['capabilities']['room_monitoring'][0])
+		#dbMongo['leaves'].insert(objLeaves['resources'][0]['capabilities']['room_monitoring'][0])
+
+		#removeOldestEntries(dbMongo['sapflow'])
+		#removeOldestEntries(dbMongo['leaves'])
+
+		#print dbMongo['sapflow'].count(), dbMongo['leaves'].count()
+
+		#lastMessages.append(sj)
+		#lastMessages.append(sjLeaves)
+
+		#if len(lastMessages) > 64:
+		#	lastMessages = lastMessages[2:]
 
 		for c in clients:
 			if not c.address in firstMessagesSent:
@@ -185,40 +219,33 @@ while True:
 				firstMessagesSent.add(c.address)
 
 				processedData = getProcessedData('processed-data', list(listWithDataProcessed))
+				processedData45 = getProcessedData('processed-data-45', list(listWithDataProcessed45))
 				processedData60 = getProcessedData('processed-data-60', list(listWithDataProcessed60))
 				c.sendMessage(processedData)
+				c.sendMessage(processedData45)
 				c.sendMessage(processedData60)
 
-			c.sendMessage(sj)
-			c.sendMessage(sjLeaves)
+			c.sendMessage(lastMessages[-2])
+			c.sendMessage(lastMessages[-1])
 
-		if time.time() - lastTimeProcessRan > 120:
-			if time.time() - lastTimeProcessedDataWasSent < 30:
-				print 'WAITING PROCESSED DATA'
-				processData.join()
-				processData60.join()
-				processData = multiprocessing.Process(target=processDataWorker, args=(listWithDataProcessed, 30))
-				processData.start()
-				processData60 = multiprocessing.Process(target=processDataWorker, args=(listWithDataProcessed60, 60))
-				processData60.start()
-				lastTimeProcessRan = time.time()
-
-		if time.time() - lastTimeProcessedDataWasSent > 30:
-
-			processData.join()
-			processData60.join()
+		if time.time() - lastTimeProcessedDataWasSent > 5:
 
 			for c in clients:
 				processedData = getProcessedData('processed-data', list(listWithDataProcessed))
 				c.sendMessage(processedData)
 
 			for c in clients:
-				processedData60 = getProcessedData('processed-data-60', list(listWithDataProcessed60))
-				c.sendMessage(processedData60)
+				processedData = getProcessedData('processed-data-45', list(listWithDataProcessed45))
+				c.sendMessage(processedData)
+
+			for c in clients:
+				processedData = getProcessedData('processed-data-60', list(listWithDataProcessed60))
+				c.sendMessage(processedData)
 
 			lastTimeProcessedDataWasSent = time.time()
 
-		print sj
-		print sjLeaves
+		#print sj
+		#print sjLeaves
+		print len( lastMessages ), len(listWithDataProcessed), len(listWithDataProcessed45), len(listWithDataProcessed60)
 
 	server.serveonce()
