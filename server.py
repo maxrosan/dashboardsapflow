@@ -1,9 +1,10 @@
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
-from multiprocessing
+import multiprocessing
 import urllib2
 import json, time
 from sets import Set
 from pymongo import MongoClient
+import dateutil.parser
 
 leavesURL = 'http://143.107.45.126:30134/collector/resources/164f4961-5e91-4d10-8e70-6e0df691f798/data/last'
 sapFlowURL = 'http://143.107.45.126:30134/collector/resources/d1557e9b-ea3e-45f8-828b-820055230e20/data/last'
@@ -60,13 +61,13 @@ def removeOldestEntries(collection):
 			print 'DEL => ', record
 			collection.remove({'date': record['date']})
 
-def getProcessedData():
+def getProcessedData(idData, data):
 
 	obj = {"resources":
 	[
 		{
-		 "uuid":"processed-data",
-		 "data": [ 0 ] * 3600 * 24
+		 "uuid": idData,
+		 "data": data
 		}
 	]
 	}
@@ -75,8 +76,86 @@ def getProcessedData():
 
 #dbMongo['sapflow'].remove()
 #dbMongo['leaves'].remove()
-dbMongo['sapflow'].create_index('date')
-dbMongo['leaves'].create_index('date')
+#dbMongo['sapflow'].create_index('date')
+#dbMongo['leaves'].create_index('date')
+
+def processDataWorker(lst, elapsedTimeAfterHeating):
+
+	import math
+
+	while True:
+		#if len(lst) < 3600 * 24:
+		lst[:] = []
+
+		i = 0
+		lastDate = None
+		upperTCList = [ ]
+		lowerTCList = [ ]
+
+		lastDay = [ r for r in dbMongo['sapflow'].find().sort([ ("date", -1) ]).limit(24 * 3600) ]
+
+		heating = 0.
+		i = None
+		count = False
+
+		for record in reversed(lastDay):
+			#print len(upperTCList)
+
+			if int(record['heating']) == 1 and int(heating) == 0 and not count:
+				count = True
+				i = dateutil.parser.parse(record['date'])
+				upperTCList[:] = []
+				lowerTCList[:] = []
+
+			heating = record['heating']
+
+			if count:
+				upperTCList.append( record['ads_0_1'] )
+				lowerTCList.append( record['ads_2_3'] )
+
+			heating = record['heating']
+			d = dateutil.parser.parse(record['date'])
+
+			if i == None:
+				i = d
+
+			diff = d - i
+
+			if count and diff.seconds > elapsedTimeAfterHeating:
+
+				count = False
+
+				div = (upperTCList[-1] - upperTCList[0] + 1e-6) / (lowerTCList[-1] - lowerTCList[0]  + 1e-6)
+
+				if div <= 0:
+					div = 1.
+
+				lst.append(
+					{
+					  'x': '%.2d:%.2d' % (d.hour, d.minute),
+					  'y': '%f' % ( math.log(div) )
+					}
+				)
+
+				upperTCList = upperTCList[1:]
+				lowerTCList = lowerTCList[1:]
+
+		print lst
+
+		#lst.append(0)
+		time.sleep(10)
+
+managerMP = multiprocessing.Manager()
+
+listWithDataProcessed = managerMP.list([])
+processData = multiprocessing.Process(target=processDataWorker, args=(listWithDataProcessed, 30))
+processData.start()
+
+listWithDataProcessed60 = managerMP.list([])
+processData60 = multiprocessing.Process(target=processDataWorker, args=(listWithDataProcessed60, 60))
+processData60.start()
+
+lastTimeProcessedDataWasSent = time.time()
 
 while True:
 
@@ -104,11 +183,26 @@ while True:
 			if not c.address in firstMessagesSent:
 				for m in lastMessages:
 					c.sendMessage(m)
-				processedData = getProcessedData()
-				c.sendMessage(processedData)
+				
 				firstMessagesSent.add(c.address)
+
+				processedData = getProcessedData('processed-data', list(listWithDataProcessed))
+				processedData60 = getProcessedData('processed-data-60', list(listWithDataProcessed60))
+				c.sendMessage(processedData)
+				c.sendMessage(processedData60)
+
 			c.sendMessage(sj)
 			c.sendMessage(sjLeaves)
+
+		if time.time() - lastTimeProcessedDataWasSent > 10:
+			for c in clients:
+				if len(listWithDataProcessed) > 0:
+					processedData = getProcessedData('processed-data', list(listWithDataProcessed))
+					processedData60 = getProcessedData('processed-data-60', list(listWithDataProcessed60))
+					c.sendMessage(processedData)
+					c.sendMessage(processedData60)
+
+			lastTimeProcessedDataWasSent = time.time()
 
 		print sj
 		print sjLeaves

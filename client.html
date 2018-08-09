@@ -20,10 +20,16 @@ window.onload = function() {
 	var soil_adc2_2_3	= [ ];
 	var temperatureEnvironmentLeaves = [ ];
 
+	var processedData = [ ];
+	var processedData60 = [ ];
+
 	var chart, chartTemperature, chartHeating, chartHumidity, chartLDR, chartSoilMoisture, chartLeafTemperature,
 	 chartHeaterTemperature;
 
 	var chartLeafADS01, chartLeafADS23, chartAir, chartSoil;
+
+	var chartProcessedData;
+	var chartProcessedData60;
 
 	var i = 0;
 	var iLeaf = 0;
@@ -66,7 +72,52 @@ window.onload = function() {
 
 				return;
 			} else if ( result['resources'][0]['uuid'] == 'processed-data' ) {
+
 				console.log('Received processed data');
+
+				while (processedData.length > 0) {
+					processedData.pop();
+				}
+
+				for (var j = 0; j < result['resources'][0]['data'].length; j++) {
+					processedData.push(
+						{
+							indexLabel: result['resources'][0]['data'][j].x,
+							indexLabelOrientation: "vertical",
+							x: j,
+							y: parseFloat(result['resources'][0]['data'][j].y) }
+					);
+
+				}
+
+				console.log(processedData);
+
+				chartProcessedData.render();
+
+				return;
+			} else if ( result['resources'][0]['uuid'] == 'processed-data-60' ) {
+
+				console.log('Received processed data - 60');
+
+				while (processedData60.length > 0) {
+					processedData60.pop();
+				}
+
+				for (var j = 0; j < result['resources'][0]['data'].length; j++) {
+					processedData60.push(
+						{
+							indexLabel: result['resources'][0]['data'][j].x,
+							indexLabelOrientation: "vertical",
+							x: j,
+							y: parseFloat(result['resources'][0]['data'][j].y) }
+					);
+
+				}
+
+				//console.log(processedData);
+
+				chartProcessedData60.render();
+
 				return;
 			}
 
@@ -111,6 +162,7 @@ window.onload = function() {
 			dataPointsHeaterTemperature.push({x: i, y: parseFloat(result['resources'][0]['capabilities']['room_monitoring'][0]['ads2_2_3'])});
 
 			if (dataPointsADS01.length > 30) {
+				console.log('RENDER!!');
 				chart.render();
 				chartTemperature.render();
 				chartHeating.render();
@@ -333,6 +385,33 @@ window.onload = function() {
 		soil_adc2_2_3, temperatureEnvironmentLeaves
 	);
 
+
+	chartProcessedData = new CanvasJS.Chart('chartProcessedData', {
+			zoomEnabled: true,
+			title:{
+				text: 'Processed Data ( ln(T1/T2) 30s after heating )'
+			},
+			data: [{
+				type: "line",
+				lineColor: 'red',
+				dataPoints : processedData,
+			},
+			]
+	});
+
+	chartProcessedData60 = new CanvasJS.Chart('chartProcessedData60', {
+			zoomEnabled: true,
+			title:{
+				text: 'Processed Data ( ln(T1/T2) 60s after heating )'
+			},
+			data: [{
+				type: "line",
+				lineColor: 'red',
+				dataPoints : processedData60,
+			},
+			]
+	});
+
 }
 
 </script>
@@ -342,6 +421,7 @@ function changePageSapFlow() {
 	if (document.getElementById("sapflow").style.display == "none") {
 		document.getElementById("leaves").style.display = "none";
 		document.getElementById("sapflow").style.display = "block";
+		document.getElementById("processeddata").style.display = "none";
 
 		chart.render();
 		chartTemperature.render();
@@ -359,6 +439,7 @@ function changePageLeaves() {
 	if (document.getElementById("leaves").style.display == "none") {
 		document.getElementById("leaves").style.display = "block";
 		document.getElementById("sapflow").style.display = "none";
+		document.getElementById("processeddata").style.display = "none";
 
 		chartLeafADS01.render();
 		chartLeafADS23.render();
@@ -366,6 +447,17 @@ function changePageLeaves() {
 		chartSoil.render();
 	}
 	console.log(document.getElementById("leaves").style.display);
+}
+
+function changePageProcessedData() {
+	if (document.getElementById("processeddata").style.display == "none") {
+		document.getElementById("processeddata").style.display = "block";
+		document.getElementById("leaves").style.display = "none";
+		document.getElementById("sapflow").style.display = "none";
+
+		chartProcessedData.render();
+		chartProcessedData60.render();
+	}
 }
 </script>
 
@@ -462,6 +554,7 @@ function changePageLeaves() {
 	  <h2>Sap Flow Project</h2>
 	  <button type="button" class="btn btn-success" onclick="changePageLeaves()">Leaves</button>
 	  <button type="button" class="btn btn-info" onclick="changePageSapFlow()">Sap Flow</button>
+		<button type="button" class="btn btn-warning" onclick="changePageProcessedData()">Processed Data</button>
 	</div>
 
 
@@ -474,6 +567,20 @@ function changePageLeaves() {
 
 <div id="loader_status">
 LOADING...
+</div>
+
+<div id="processeddata" style="display: none;">
+
+	<br/><br/>
+	<div align="center">
+		<div id="chartProcessedData" class="chartCustom"></div>
+	</div>
+
+	<br/><br/>
+	<div align="center">
+		<div id="chartProcessedData60" class="chartCustom"></div>
+	</div>
+
 </div>
 
 <div id="sapflow" style="display: block;">
