@@ -192,7 +192,7 @@ while True:
 			c.sendMessage(sj)
 			c.sendMessage(sjLeaves)
 
-		if time.time() - lastTimeProcessRan > 10:
+		if time.time() - lastTimeProcessRan > 120:
 			if time.time() - lastTimeProcessedDataWasSent < 30:
 				print 'WAITING PROCESSED DATA'
 				processData.join()
