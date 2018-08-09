@@ -73,44 +73,54 @@ window.onload = function() {
 				return;
 			} else if ( result['resources'][0]['uuid'] == 'processed-data' ) {
 
-				console.log('Received processed data');
-
 				while (processedData.length > 0) {
 					processedData.pop();
 				}
 
 				for (var j = 0; j < result['resources'][0]['data'].length; j++) {
-					processedData.push(
-						{
-							indexLabel: result['resources'][0]['data'][j].x,
-							indexLabelOrientation: "vertical",
-							x: j,
-							y: parseFloat(result['resources'][0]['data'][j].y) }
-					);
+					if (j % 100 == 0) {
+						processedData.push(
+							{
+								indexLabel: result['resources'][0]['data'][j].x,
+								indexLabelOrientation: "vertical",
+								x: j,
+								y: parseFloat(result['resources'][0]['data'][j].y) }
+						);
+					} else {
+						processedData.push(
+								{
+									x: j,
+									y: parseFloat(result['resources'][0]['data'][j].y) }
+							);
+					}
 
 				}
-
-				console.log(processedData);
 
 				chartProcessedData.render();
 
 				return;
 			} else if ( result['resources'][0]['uuid'] == 'processed-data-60' ) {
 
-				console.log('Received processed data - 60');
-
 				while (processedData60.length > 0) {
 					processedData60.pop();
 				}
 
-				for (var j = 0; j < result['resources'][0]['data'].length; j++) {
-					processedData60.push(
-						{
-							indexLabel: result['resources'][0]['data'][j].x,
-							indexLabelOrientation: "vertical",
-							x: j,
-							y: parseFloat(result['resources'][0]['data'][j].y) }
-					);
+				for (var l = 0; l < result['resources'][0]['data'].length; l++) {
+					if (l % 100 == 0) {
+						processedData60.push(
+							{
+								indexLabel: result['resources'][0]['data'][l].x,
+								indexLabelOrientation: "vertical",
+								x: l,
+								y: parseFloat(result['resources'][0]['data'][l].y) }
+						);
+					} else {
+						processedData60.push(
+							{
+								x: l,
+								y: parseFloat(result['resources'][0]['data'][l].y) }
+						);
+					}
 
 				}
 
