@@ -1,0 +1,9 @@
+[Unit]
+Description = Dashboard for IoTrees project
+After = network.target
+[Service]
+ExecStart = /home/max/dashboard_git/dashboardsapflow/start_server.sh
+ExecStop = /home/max/dashboard_git/dashboardsapflow/stop_server.sh
+StandardOutput=journal
+[Install]
+WantedBy = multi-user.target
