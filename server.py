@@ -47,6 +47,8 @@ def downloadInParallel(url):
 		j = downloadJson(url)
 		sj = json.dumps(j)
 
+		print sj
+
 		return (sj, j)
 
 p = Pool(2)
