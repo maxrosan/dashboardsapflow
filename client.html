@@ -430,9 +430,6 @@ window.onload = function() {
 
 }
 
-</script>
-
-<script>
 function changePageSapFlow() {
 	if (document.getElementById("sapflow").style.display == "none") {
 		document.getElementById("leaves").style.display = "none";
@@ -471,11 +468,13 @@ function changePageProcessedData() {
 		document.getElementById("leaves").style.display = "none";
 		document.getElementById("sapflow").style.display = "none";
 
-		//chartProcessedData.render();
-		//chartProcessedData60.render();
+		chartProcessedData.render();
+		chartProcessedData60.render();
 	}
 }
+
 </script>
+
 
 <!--<script type="text/javascript" src="https://canvasjs.com/assets/script/jquery-1.11.1.min.js"></script>-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
