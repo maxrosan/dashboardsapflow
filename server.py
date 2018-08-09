@@ -6,8 +6,11 @@ from sets import Set
 from pymongo import MongoClient
 import dateutil.parser
 
-leavesURL = 'http://143.107.45.126:30134/collector/resources/164f4961-5e91-4d10-8e70-6e0df691f798/data/last'
-sapFlowURL = 'http://143.107.45.126:30134/collector/resources/d1557e9b-ea3e-45f8-828b-820055230e20/data/last'
+#leavesURL = 'http://143.107.45.126:30134/collector/resources/164f4961-5e91-4d10-8e70-6e0df691f798/data/last'
+#sapFlowURL = 'http://143.107.45.126:30134/collector/resources/d1557e9b-ea3e-45f8-828b-820055230e20/data/last'
+
+leavesURL = 'http://172.17.0.134:8000/collector/resources/164f4961-5e91-4d10-8e70-6e0df691f798/data/last'
+sapFlowURL = 'http://172.17.0.134:8000/collector/resources/d1557e9b-ea3e-45f8-828b-820055230e20/data/last'
 
 def downloadJson(url):
 	request = urllib2.Request(url)
