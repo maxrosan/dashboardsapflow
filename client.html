@@ -73,6 +73,8 @@ window.onload = function() {
 				return;
 			} else if ( result['resources'][0]['uuid'] == 'processed-data' ) {
 
+				console.log('Received 30');
+
 				while (processedData.length > 0) {
 					processedData.pop();
 				}
@@ -100,6 +102,8 @@ window.onload = function() {
 
 				return;
 			} else if ( result['resources'][0]['uuid'] == 'processed-data-60' ) {
+
+				console.log('Received 30');
 
 				while (processedData60.length > 0) {
 					processedData60.pop();
@@ -465,8 +469,8 @@ function changePageProcessedData() {
 		document.getElementById("leaves").style.display = "none";
 		document.getElementById("sapflow").style.display = "none";
 
-		//chartProcessedData.render();
-		//chartProcessedData60.render();
+		chartProcessedData.render();
+		chartProcessedData60.render();
 	}
 }
 </script>
