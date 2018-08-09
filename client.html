@@ -34,8 +34,8 @@ window.onload = function() {
 	var i = 0;
 	var iLeaf = 0;
 
-	//var clientSocket = new WebSocket("ws://localhost:8000");
-	var clientSocket = new WebSocket("ws://159.89.89.60:8000");
+	var clientSocket = new WebSocket("ws://localhost:8000");
+	//var clientSocket = new WebSocket("ws://159.89.89.60:8000");
 
 	clientSocket.onmessage = function (event) {
 
@@ -80,7 +80,7 @@ window.onload = function() {
 				}
 
 				for (var j = 0; j < result['resources'][0]['data'].length; j++) {
-					if (j % 100 == 0) {
+					if (j % 50 == 0) {
 						processedData.push(
 							{
 								indexLabel: result['resources'][0]['data'][j].x,
@@ -98,19 +98,21 @@ window.onload = function() {
 
 				}
 
+				console.log('processedData => ' + processedData.length + ' ' + result['resources'][0]['data'].length);
+
 				chartProcessedData.render();
 
 				return;
 			} else if ( result['resources'][0]['uuid'] == 'processed-data-60' ) {
 
-				console.log('Received 30');
+				console.log('Received 60');
 
 				while (processedData60.length > 0) {
 					processedData60.pop();
 				}
 
 				for (var l = 0; l < result['resources'][0]['data'].length; l++) {
-					if (l % 100 == 0) {
+					if (l % 50 == 0) {
 						processedData60.push(
 							{
 								indexLabel: result['resources'][0]['data'][l].x,
@@ -469,8 +471,8 @@ function changePageProcessedData() {
 		document.getElementById("leaves").style.display = "none";
 		document.getElementById("sapflow").style.display = "none";
 
-		chartProcessedData.render();
-		chartProcessedData60.render();
+		//chartProcessedData.render();
+		//chartProcessedData60.render();
 	}
 }
 </script>

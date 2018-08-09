@@ -79,20 +79,21 @@ def getProcessedData(idData, data):
 #dbMongo['sapflow'].create_index('date')
 #dbMongo['leaves'].create_index('date')
 
-def processDataWorker(lst, elapsedTimeAfterHeating):
+def processDataWorker(lstRef, elapsedTimeAfterHeating):
 
 	import math
 
 	while True:
 		#if len(lst) < 3600 * 24:
-		lst[:] = []
+
+		lst = []
 
 		i = 0
 		lastDate = None
 		upperTCList = [ ]
 		lowerTCList = [ ]
 
-		lastDay = [ r for r in dbMongo['sapflow'].find().sort([ ("date", -1) ]).limit(24 * 3600) ]
+		lastDay = [ r for r in dbMongo['sapflow'].find().sort([ ("date", -1) ]).limit(48 * 3600) ]
 
 		heating = 0.
 		i = None
@@ -141,9 +142,10 @@ def processDataWorker(lst, elapsedTimeAfterHeating):
 				lowerTCList = lowerTCList[1:]
 
 		print lst
+		lstRef[:] = lst
+		time.sleep(10)
 
 		#lst.append(0)
-		time.sleep(10)
 
 managerMP = multiprocessing.Manager()
 
@@ -183,7 +185,7 @@ while True:
 			if not c.address in firstMessagesSent:
 				for m in lastMessages:
 					c.sendMessage(m)
-				
+
 				firstMessagesSent.add(c.address)
 
 				processedData = getProcessedData('processed-data', list(listWithDataProcessed))
@@ -194,7 +196,7 @@ while True:
 			c.sendMessage(sj)
 			c.sendMessage(sjLeaves)
 
-		if time.time() - lastTimeProcessedDataWasSent > 10:
+		if time.time() - lastTimeProcessedDataWasSent > 30:
 			for c in clients:
 				if len(listWithDataProcessed) > 0:
 					processedData = getProcessedData('processed-data', list(listWithDataProcessed))
