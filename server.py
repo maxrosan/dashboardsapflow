@@ -82,70 +82,65 @@ def getProcessedData(idData, data):
 def processDataWorker(lstRef, elapsedTimeAfterHeating):
 
 	import math
+	
+	lst = []
 
-	while True:
-		#if len(lst) < 3600 * 24:
+	i = 0
+	lastDate = None
+	upperTCList = [ ]
+	lowerTCList = [ ]
 
-		lst = []
+	lastDay = [ r for r in dbMongo['sapflow'].find().sort([ ("date", -1) ]).limit(48 * 3600) ]
 
-		i = 0
-		lastDate = None
-		upperTCList = [ ]
-		lowerTCList = [ ]
+	heating = 0.
+	i = None
+	count = False
 
-		lastDay = [ r for r in dbMongo['sapflow'].find().sort([ ("date", -1) ]).limit(48 * 3600) ]
+	for record in reversed(lastDay):
+		#print len(upperTCList)
 
-		heating = 0.
-		i = None
-		count = False
+		if int(record['heating']) == 1 and int(heating) == 0 and not count:
+			count = True
+			i = dateutil.parser.parse(record['date'])
+			upperTCList[:] = []
+			lowerTCList[:] = []
 
-		for record in reversed(lastDay):
-			#print len(upperTCList)
+		heating = record['heating']
 
-			if int(record['heating']) == 1 and int(heating) == 0 and not count:
-				count = True
-				i = dateutil.parser.parse(record['date'])
-				upperTCList[:] = []
-				lowerTCList[:] = []
+		if count:
+			upperTCList.append( record['ads_0_1'] )
+			lowerTCList.append( record['ads_2_3'] )
 
-			heating = record['heating']
+		heating = record['heating']
+		d = dateutil.parser.parse(record['date'])
 
-			if count:
-				upperTCList.append( record['ads_0_1'] )
-				lowerTCList.append( record['ads_2_3'] )
+		if i == None:
+			i = d
 
-			heating = record['heating']
-			d = dateutil.parser.parse(record['date'])
+		diff = d - i
 
-			if i == None:
-				i = d
+		if count and diff.seconds > elapsedTimeAfterHeating:
 
-			diff = d - i
+			count = False
 
-			if count and diff.seconds > elapsedTimeAfterHeating:
+			div = (upperTCList[-1] - upperTCList[0] + 1e-6) / (lowerTCList[-1] - lowerTCList[0]  + 1e-6)
 
-				count = False
+			if div <= 0:
+				div = 1.
 
-				div = (upperTCList[-1] - upperTCList[0] + 1e-6) / (lowerTCList[-1] - lowerTCList[0]  + 1e-6)
+			lst.append(
+				{
+				  'x': '%.2d:%.2d' % (d.hour, d.minute),
+				  'y': '%f' % ( math.log(div) )
+				}
+			)
 
-				if div <= 0:
-					div = 1.
+			upperTCList = upperTCList[1:]
+			lowerTCList = lowerTCList[1:]
 
-				lst.append(
-					{
-					  'x': '%.2d:%.2d' % (d.hour, d.minute),
-					  'y': '%f' % ( math.log(div) )
-					}
-				)
-
-				upperTCList = upperTCList[1:]
-				lowerTCList = lowerTCList[1:]
-
-		print lst
-		lstRef[:] = lst
-		time.sleep(10)
-
-		#lst.append(0)
+	print lst
+	lstRef[:] = lst
+	#time.sleep(10)
 
 managerMP = multiprocessing.Manager()
 
@@ -158,6 +153,7 @@ processData60 = multiprocessing.Process(target=processDataWorker, args=(listWith
 processData60.start()
 
 lastTimeProcessedDataWasSent = time.time()
+lastTimeProcessRan = time.time()
 
 while True:
 
@@ -196,13 +192,27 @@ while True:
 			c.sendMessage(sj)
 			c.sendMessage(sjLeaves)
 
+		if time.time() - lastTimeProcessRan > 10:
+			if time.time() - lastTimeProcessedDataWasSent < 30:
+				print 'WAITING PROCESSED DATA'
+				processData.join()
+				processData60.join()
+				processData = multiprocessing.Process(target=processDataWorker, args=(listWithDataProcessed, 30))
+				processData.start()
+				processData60 = multiprocessing.Process(target=processDataWorker, args=(listWithDataProcessed60, 60))
+				processData60.start()
+				lastTimeProcessRan = time.time()
+
 		if time.time() - lastTimeProcessedDataWasSent > 30:
+
+			processData.join()
+			processData60.join()
+
 			for c in clients:
-				if len(listWithDataProcessed) > 0:
-					processedData = getProcessedData('processed-data', list(listWithDataProcessed))
-					processedData60 = getProcessedData('processed-data-60', list(listWithDataProcessed60))
-					c.sendMessage(processedData)
-					c.sendMessage(processedData60)
+				processedData = getProcessedData('processed-data', list(listWithDataProcessed))
+				processedData60 = getProcessedData('processed-data-60', list(listWithDataProcessed60))
+				c.sendMessage(processedData)
+				c.sendMessage(processedData60)
 
 			lastTimeProcessedDataWasSent = time.time()
 
