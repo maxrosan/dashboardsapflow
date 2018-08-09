@@ -93,14 +93,13 @@ def processDataWorker(lstRef, elapsedTimeAfterHeating):
 		upperTCList = [ ]
 		lowerTCList = [ ]
 
-		lastDay = [ r for r in dbMongo['sapflow'].find().sort([ ("date", -1) ]).limit(48 * 3600) ]
-
-		print 'lastDay', len(lastDay)
+		lastDay = [ r for r in dbMongo['sapflow'].find().sort([ ("date", -1) ]).limit(12 * 3600) ]
 
 		heating = 0.
 		i = None
 		count = False
 
+		print 'Processing'
 		for record in reversed(lastDay):
 			#print len(upperTCList)
 
