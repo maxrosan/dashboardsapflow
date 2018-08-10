@@ -179,6 +179,10 @@ def downloadEverything(lastMessages):
 		if len(lastMessages) > 64:
 			lastMessages[:] = lastMessages[2:]
 
+		print 'Download'
+		print sj, sjLaves
+		print '-------'
+
 		time.sleep(1)
 
 	return
