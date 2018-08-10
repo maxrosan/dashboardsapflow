@@ -263,6 +263,9 @@ while True:
 
 		#print sj
 		#print sjLeaves
+		print '-----'
+		print lastMessages[-1]
+		print '-----'
 		print len( lastMessages ), len(listWithDataProcessed), len(listWithDataProcessed45), len(listWithDataProcessed60)
 
 	server.serveonce()
