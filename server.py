@@ -50,6 +50,10 @@ def downloadInParallel(url):
 		j = downloadJson(url)
 		sj = json.dumps(j)
 
+		print url
+		print sj
+		print '-----------'
+
 		#print sj
 
 		return (sj, j)
