@@ -272,6 +272,8 @@ while True:
 		#print sj
 		#print sjLeaves
 		print '-----'
+		print 'LAST'
+		print lastMessages[-2]
 		print lastMessages[-1]
 		print '-----'
 		print len( lastMessages ), len(listWithDataProcessed), len(listWithDataProcessed45), len(listWithDataProcessed60)
