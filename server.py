@@ -180,7 +180,7 @@ def downloadEverything(lastMessages):
 			lastMessages[:] = lastMessages[2:]
 
 		print 'Download'
-		print sj, sjLaves
+		print sj, sjLeaves
 		print '-------'
 
 		time.sleep(1)
